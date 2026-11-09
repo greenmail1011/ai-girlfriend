@@ -22,15 +22,22 @@ const save = () => { store.set("messages", messages.slice(-MAX_STORED)); store.s
 const matureReady = () => !!(cfg.mBase && cfg.mKey && cfg.mModel);
 
 async function callLLM(msgs, { mature = false, temperature = 0.9, max_tokens = 400 } = {}) {
-  const base = (mature ? cfg.mBase : cfg.base) || "https://api.openai.com/v1";
+  cfg = store.get("cfg", cfg); // 永遠讀最新設定（多個分頁同時開著時）
   const key = mature ? cfg.mKey : cfg.key;
-  const model = (mature ? cfg.mModel : cfg.model) || "gpt-4o-mini";
+  const isOR = (key || "").startsWith("sk-or-");
+  const base = (mature ? cfg.mBase : cfg.base) || (isOR ? "https://openrouter.ai/api/v1" : "https://api.openai.com/v1");
+  const model = (mature ? cfg.mModel : cfg.model) || (isOR ? "openai/gpt-4o-mini" : "gpt-4o-mini");
   if (!key) return mockReply(msgs);
-  const r = await fetch(base.replace(/\/+$/, "") + "/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
-    body: JSON.stringify({ model, messages: msgs, temperature, max_tokens }),
-  });
+  let r;
+  try {
+    r = await fetch(base.replace(/\/+$/, "") + "/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + key },
+      body: JSON.stringify({ model, messages: msgs, temperature, max_tokens }),
+    });
+  } catch {
+    throw new Error(`連不到 ${base}。請檢查 API 網址是否正確、網路是否正常，或是廣告阻擋外掛有沒有擋住它。`);
+  }
   if (!r.ok) {
     const t = await r.text().catch(() => "");
     throw new Error(`模型回應 ${r.status}：${t.slice(0, 160)}`);
@@ -320,6 +327,7 @@ function renderFacts() {
   });
 }
 function openSheet() {
+  cfg = store.get("cfg", cfg);
   Object.entries(CFG_FIELDS).forEach(([id, k]) => ($(id).value = cfg[k] || ""));
   $("modelBox").open = !cfg.key;
   renderFacts();
