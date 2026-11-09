@@ -1,5 +1,5 @@
 // ===== 3D 版：所有東西都在瀏覽器裡跑 =====
-import { Avatar } from "./avatar.js";
+import { Avatar } from "./avatar.js?v=3";
 
 const P = window.PERSONA;
 const $ = (id) => document.getElementById(id);
