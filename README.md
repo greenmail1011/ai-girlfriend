@@ -29,3 +29,27 @@
 ## 模型建議
 - 日常聊天：GPT-4o-mini、Gemini Flash、DeepSeek 都便宜好用；中文口語要自然，模型大一點效果明顯較好
 - 本機 Ollama：`ollama pull qwen2.5:14b`，再把 `.env` 指向 `http://localhost:11434/v1`
+
+---
+
+# 純網頁版（`docs/` 資料夾）
+
+不用裝 Python，打開網頁就能聊。所有東西（金鑰、對話、記憶）都只存在你自己的瀏覽器裡。
+
+## 使用方式
+- **在電腦上直接開**：用瀏覽器打開 `docs/index.html`
+- **放上 GitHub Pages**：repo 的 Settings → Pages → Source 選 `main` 分支、`/docs` 資料夾（免費方案需要 repo 是公開的；公開的只有程式碼，金鑰和對話不會外流）
+
+第一次打開後，點右上角 ⋯ →「模型設定」填入 API 網址、金鑰、模型名稱。
+
+## 和 Python 版的差別
+| | Python 版 | 純網頁版 |
+|---|---|---|
+| 安裝 | 需要 Python | 不用 |
+| 人設 | `persona.yaml` | `docs/persona.js` |
+| 語音 | Edge 神經語音 | 瀏覽器內建（用 **Edge 瀏覽器**才有自然的台灣女聲） |
+| 記憶 | 存在電腦的資料庫 | 存在瀏覽器；可在設定裡匯出 / 匯入，搬到別的裝置 |
+
+## 注意
+- 有些 API 不允許從瀏覽器直接呼叫（會出現 CORS 錯誤）。OpenAI、OpenRouter 可以；本機 Ollama 要先設定環境變數 `OLLAMA_ORIGINS=*`
+- 清除瀏覽器資料會連記憶一起清掉，重要的話記得定期匯出

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>聊天</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="avatar" id="avatar"></div>
+      <div class="who">
+        <div class="name" id="name">…</div>
+        <div class="status" id="status">在線上</div>
+      </div>
+      <div class="mood" id="mood" title="心情"></div>
+      <button class="icon" id="btnVoice" title="語音回覆">🔈</button>
+      <button class="icon" id="btnMenu" title="設定">⋯</button>
+    </header>
+
+    <div class="affection" title="好感度"><div id="affBar"></div></div>
+
+    <main class="chat" id="chat"></main>
+
+    <footer class="composer">
+      <button class="icon mic" id="btnMic" title="按一下說話">🎙</button>
+      <textarea id="input" rows="1" placeholder="輸入訊息…"></textarea>
+      <button class="send" id="btnSend" title="送出">➤</button>
+    </footer>
+  </div>
+
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet-card">
+      <h3>設定</h3>
+
+      <label class="row"><span>通話模式<small>她說完會自動聽你講話</small></span><input type="checkbox" id="optCall"></label>
+      <label class="row"><span>主動傳訊息<small>你太久沒說話，她會來找你</small></span><input type="checkbox" id="optProactive" checked></label>
+      <label class="row" id="matureRow" hidden><span>成人模式 18+<small>切換到下方設定的成人模型</small></span><input type="checkbox" id="optMature"></label>
+
+      <details id="modelBox">
+        <summary>模型設定</summary>
+        <label class="field"><span>API 網址</span><input id="cfgBase" placeholder="https://api.openai.com/v1"></label>
+        <label class="field"><span>API 金鑰</span><input id="cfgKey" type="password" autocomplete="off" placeholder="sk-…（留空＝測試模式）"></label>
+        <label class="field"><span>模型名稱</span><input id="cfgModel" placeholder="gpt-4o-mini"></label>
+        <p class="hint">金鑰只存在這個瀏覽器裡。支援任何 OpenAI 相容 API（OpenAI、OpenRouter、xAI、本機 Ollama…）。</p>
+        <details>
+          <summary>成人模式模型（選填）</summary>
+          <label class="field"><span>API 網址</span><input id="cfgMBase"></label>
+          <label class="field"><span>API 金鑰</span><input id="cfgMKey" type="password" autocomplete="off"></label>
+          <label class="field"><span>模型名稱</span><input id="cfgMModel"></label>
+          <label class="field"><span>補充人設（自行撰寫）</span><textarea id="cfgMExtra"></textarea></label>
+          <p class="hint">三格都填了，上方才會出現成人模式開關。請自行確認服務條款允許成人內容；角色永遠是成年人。</p>
+        </details>
+        <div class="actions"><button id="btnSaveCfg">儲存設定</button></div>
+      </details>
+
+      <h4>她記得的事</h4>
+      <ul class="facts" id="facts"></ul>
+
+      <div class="actions wrap">
+        <button id="btnExport">匯出記憶</button>
+        <button id="btnImport">匯入記憶</button>
+        <button id="btnReset" class="danger">清空對話</button>
+        <button id="btnClose">關閉</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </div>
+
+  <script src="persona.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
