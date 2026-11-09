@@ -1,0 +1,7 @@
+fastapi>=0.110
+uvicorn>=0.29
+openai>=1.30
+edge-tts>=6.1
+pyyaml>=6.0
+python-dotenv>=1.0
+tzdata
