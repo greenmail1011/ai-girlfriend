@@ -1,0 +1,7 @@
+node_modules/
+.firebase/
+*.log
+.runtimeconfig.json
+functions/.env
+functions/.env.*
+!functions/.env.example

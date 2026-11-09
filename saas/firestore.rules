@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 使用者只能「讀」自己的資料；餘額、對話、帳本一律只能由後端寫入
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+      match /{sub=**} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
+    }
+    // 其他全部禁止
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

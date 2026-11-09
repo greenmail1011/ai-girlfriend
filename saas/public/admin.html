@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>管理後台</title>
+  <style>
+    :root { --bg: #f7f3f4; --panel: #fff; --ink: #2d2427; --muted: #8b7d81; --line: #ebe2e4; --accent: #d9667e; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #1b1619; --panel: #241c22; --ink: #f1e8eb; --muted: #a2939a; --line: #3a2f35; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Noto Sans TC", system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+    main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 60px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 18px 0; }
+    .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+    .stat b { display: block; font-size: 22px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    input, button { font: inherit; }
+    .search { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); margin-bottom: 12px; }
+    .table { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+    th { color: var(--muted); font-weight: 500; font-size: 12px; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tr:last-child td { border-bottom: 0; }
+    .uid { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); }
+    button { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+    button.primary { background: var(--accent); border-color: transparent; color: #fff; }
+    .msg { margin: 12px 0; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>管理後台</h1>
+    <div class="muted" id="who">登入中…</div>
+    <div class="stats">
+      <div class="stat">會員數<b id="sUsers">–</b></div>
+      <div class="stat">流通點數<b id="sPoints">–</b></div>
+      <div class="stat">API 總成本<b id="sCost">–</b></div>
+      <div class="stat">預估營收（已消耗點數）<b id="sRev">–</b></div>
+    </div>
+    <input class="search" id="q" placeholder="搜尋 Email、名字或會員代碼">
+    <div class="msg" id="msg"></div>
+    <div class="table">
+      <table>
+        <thead><tr><th>會員</th><th>加入日期</th><th class="num">訊息數</th><th class="num">API 成本</th><th class="num">餘額</th><th>加點數</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js";
+    import { firebaseConfig, FUNCTIONS_REGION } from "./firebase-config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const fns = getFunctions(app, FUNCTIONS_REGION);
+    const $ = (id) => document.getElementById(id);
+    let users = [];
+    const TWD = 32, MARKUP = 3; // 與 functions/config.js 一致，只用來顯示估算
+
+    function render() {
+      const q = $("q").value.trim().toLowerCase();
+      const list = users.filter((u) => !q || [u.email, u.name, u.uid].join(" ").toLowerCase().includes(q));
+      $("rows").innerHTML = "";
+      for (const u of list) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><div>${esc(u.name || "（未命名）")} · ${esc(u.email)}</div><div class="uid">${u.uid}</div></td>
+          <td>${new Date(u.createdAt).toLocaleDateString("zh-TW")}</td>
+          <td class="num">${u.msgCount}</td>
+          <td class="num">US$ ${u.spentUsd.toFixed(3)}</td>
+          <td class="num"><b>${u.balance.toFixed(2)}</b></td>
+          <td><input type="number" style="width:80px" placeholder="點數"> <button class="primary">加點</button></td>`;
+        const [inp, btn] = [tr.querySelector("input"), tr.querySelector("button")];
+        btn.onclick = async () => {
+          const points = Number(inp.value);
+          if (!points) return;
+          const note = prompt(`幫 ${u.email} 加 ${points} 點。備註（例如轉帳末五碼）：`, "");
+          if (note === null) return;
+          btn.disabled = true;
+          try {
+            const r = await httpsCallable(fns, "adminAddPoints")({ uid: u.uid, points, note });
+            u.balance = r.data.balance; render(); flash(`已幫 ${u.email} 加 ${points} 點`);
+          } catch (e) { flash("失敗：" + e.message); btn.disabled = false; }
+        };
+        $("rows").append(tr);
+      }
+      $("sUsers").textContent = users.length;
+      $("sPoints").textContent = users.reduce((s, u) => s + u.balance, 0).toFixed(0);
+      const cost = users.reduce((s, u) => s + u.spentUsd, 0);
+      $("sCost").textContent = "NT$ " + (cost * TWD).toFixed(0);
+      $("sRev").textContent = "NT$ " + (cost * TWD * MARKUP).toFixed(0);
+    }
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const flash = (t) => { $("msg").textContent = t; setTimeout(() => ($("msg").textContent = ""), 4000); };
+    $("q").oninput = render;
+
+    onAuthStateChanged(getAuth(app), async (user) => {
+      if (!user) { $("who").innerHTML = '請先到<a href="./">首頁</a>登入'; return; }
+      $("who").textContent = user.email;
+      try { users = (await httpsCallable(fns, "adminListUsers")()).data; render(); }
+      catch (e) { $("who").textContent = user.email + "：" + e.message; }
+    });
+  </script>
+</body>
+</html>

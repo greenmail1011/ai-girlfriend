@@ -1,0 +1,25 @@
+.pill { border: 1px solid var(--glass-line); background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  color: var(--ink); height: 40px; padding: 0 14px; border-radius: 20px; font-size: 14px; font-weight: 500; }
+.pill.low { background: #d0485e; border-color: transparent; }
+
+.gate { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px;
+  background: rgba(20, 14, 22, .55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.gate-card { width: min(380px, 100%); background: var(--panel); color: var(--panel-ink); border-radius: 22px; padding: 28px 24px; text-align: center; }
+.gate-title { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.gate-card p { color: var(--panel-muted); line-height: 1.7; margin: 8px 0 20px; }
+.gate-card .fine { font-size: 12px; margin: 16px 0 0; }
+.gate-card a { color: var(--accent); }
+.google { width: 100%; padding: 12px; border-radius: 12px; border: 0; background: #fff; color: #222; font-weight: 500; font-size: 15px; }
+
+.big { font-size: 28px; font-weight: 700; margin: 4px 0; }
+.topup-text { white-space: pre-wrap; font-family: inherit; font-size: 14px; line-height: 1.7; background: var(--panel-bg2);
+  border: 1px solid var(--panel-line); border-radius: 12px; padding: 12px; margin: 12px 0; }
+.actions .btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--panel-line); background: var(--panel-bg2);
+  color: var(--panel-ink); text-align: center; text-decoration: none; }
+
+@media (max-width: 480px) {
+  .tools { gap: 4px; }
+  .tools .icon { width: 36px; height: 36px; font-size: 15px; }
+  .pill { height: 36px; padding: 0 10px; font-size: 13px; }
+  .who { min-width: 0; padding: 7px 11px 9px; }
+}
